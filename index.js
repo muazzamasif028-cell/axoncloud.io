@@ -1,7 +1,6 @@
 const express = require('express');
 const app = express();
 
-// 1. Dashboard UI Function
 const dashboardHTML = (req, res) => {
     res.send(`
         <body style="background:#000;color:gold;font-family:monospace;padding:50px;text-align:center;border:10px double gold;">
@@ -16,13 +15,8 @@ const dashboardHTML = (req, res) => {
     `);
 };
 
-// 2. Clear Routes (No Duplicates!)
 app.get('/', dashboardHTML);
 app.get('/admin/deploy', dashboardHTML);
-app.get('/admin/global-deploy', dashboardHTML);
-
-// 3. Catch-All for 404s
 app.get('*', dashboardHTML); 
 
-// 4. THE VERCEL EXPORT (Must be at the very end)
 module.exports = app;
