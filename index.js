@@ -1,15 +1,17 @@
 const express = require('express');
+const cors = require('cors');
 const { Storage } = require('@google-cloud/storage');
 const vision = require('@google-cloud/vision');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const app = express();
 
+const app = express();
+app.use(cors());
 app.use(express.json());
 
 // 🛡️ THE OMEGA DATABASE (Cloud Logic)
-let activeNodes = []; 
+let activeNodes = [];
 const REVENUE_PER_NODE = 5000000;
-const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786"; // 🔑 Sirf aapke liye
+const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786"; // 🔑 Your Admin Key
 
 // 🔌 GOOGLE CLOUD CONFIG
 const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
@@ -21,7 +23,9 @@ async function scanAsset(imageUrl) {
     try {
         const [result] = await visionClient.labelDetection(imageUrl);
         return result.labelAnnotations.map(label => label.description).slice(0, 3).join(', ');
-    } catch (e) { return "Scan Offline"; }
+    } catch (e) { 
+        return "Scan Offline"; 
+    }
 }
 
 // 🔌 THE JUDGE & AUDITOR: Secure Handshake
@@ -37,13 +41,12 @@ app.post('/api/website-handshake', async (req, res) => {
         
         // 2. THE JUDGE: User vs Company Logic
         if (type === 'COMPANY') {
-            // Path: $5,000,000 Activation
             const session = await stripe.checkout.sessions.create({
                 line_items: [{
                     price_data: {
                         currency: 'usd',
                         product_data: { name: `AXON NODE: ${companyName}` },
-                        unit_amount: 500000000, // $5M
+                        unit_amount: 500000000, // $5,000,000
                     },
                     quantity: 1,
                 }],
@@ -54,7 +57,7 @@ app.post('/api/website-handshake', async (req, res) => {
             return res.json({ url: session.url });
         } 
 
-        // Path: USER 14-Day Trial
+        // 3. THE MULTIPLIER: Save Node
         const newNode = {
             name: companyName || "Independent Node",
             commander: fullName || "Guest",
@@ -62,51 +65,48 @@ app.post('/api/website-handshake', async (req, res) => {
             tags: aiTags,
             plan: plan || "BASIC",
             timestamp: new Date().toLocaleString(),
-            status: "TRIAL-ACTIVE"
+            status: "SECURED"
         };
 
-        // Save to Google Cloud Bucket
         const bucket = storage.bucket('axon-nodes-vault');
         const blob = bucket.file(`${newNode.name}-${Date.now()}.json`);
         await blob.save(JSON.stringify(newNode));
 
         activeNodes.push(newNode);
-        res.json({ success: true, message: "14-DAY TRIAL INITIATED" });
+        res.json({ success: true, message: "MISSION FINISHED: NODE SECURED" });
 
     } catch (error) {
+        console.error("System Error:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
 
 // --- 🖥️ SUPREME COMMAND CENTER UI ---
 app.get('/', (req, res) => {
-    const isAdmin = req.query.key === PLATFORM_MASTER_KEY; // Admin Check
+    const isAdmin = req.query.key === PLATFORM_MASTER_KEY;
 
     let nodesList = activeNodes.map(node => `
         <div style="border-bottom:1px solid #333; padding:15px; text-align:left;">
             <span style="color:#0f0;">[${node.timestamp}]</span> 
             <b style="color:gold;">${node.name}</b> (${node.plan})
             <br><small style="color:#888;">AI Tags: ${node.tags} | Commander: ${node.commander}</small>
-            ${isAdmin ? `<br><button style="color:red; background:none; border:1px solid red; cursor:pointer;">TERMINATE NODE</button>` : ''}
         </div>
     `).reverse().join('') || "<p style='color:#444;'>Waiting for Handshakes...</p>";
 
     res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>AXON-OMEGA | LIVE COMMAND</title>
-            <style>
-                body { background:#000; color:gold; font-family:monospace; margin:0; padding:40px; text-align:center; }
-                .vault-box { border:10px double gold; padding:40px; background:#050505; max-width:900px; margin:auto; box-shadow:0 0 30px rgba(255,215,0,0.4); }
-                .stats { display:flex; justify-content:space-around; margin:30px 0; border-bottom:1px solid #222; padding-bottom:20px; }
-                .node-container { background:#111; border:1px solid gold; height:300px; overflow-y:auto; padding:15px; }
-                .withdraw-btn { background: #0f0; color: #000; padding: 15px; font-weight: bold; border: none; cursor: pointer; display: ${isAdmin ? 'block' : 'none'}; width: 100%; margin-top: 20px; }
-            </style>
-        </head>
-        <body>
-            <div class="vault-box">
-                <h1>🛡️ AXON-CORE COMMAND LIVE</h1>
-                <p style="color:#0f0;">[SOVEREIGN STATUS: ${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}]</p>
-                <div class="stats">
-                    <div><p>NODES</p><h2>${activeNodes.length}</h2>
+        <body style="background:#000; color:gold; font-family:monospace; text-align:center; padding:50px;">
+            <div style="border:5px double gold; padding:40px; background:#050505; max-width:850px; margin:auto;">
+                <h1>🛡️ AXON COMMAND CENTER</h1>
+                <p style="color:#0f0;">SYSTEM STATUS: ${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}</p>
+                <div style="display:flex; justify-content:space-around; margin:30px 0; border-bottom:1px solid #222; padding-bottom:20px;">
+                    <div><p>NODES</p><h2>${activeNodes.length} / 200</h2></div>
+                    <div><p>REVENUE</p><h2 style="color:#0f0;">$${(activeNodes.length * REVENUE_PER_NODE).toLocaleString()}</h2></div>
+                </div>
+                <div style="background:#111; border:1px solid gold; height:300px; overflow-y:auto; padding:15px;">${nodesList}</div>
+                ${isAdmin ? `<button style="background:lime; color:black; padding:15px; width:100%; margin-top:20px; font-weight:bold; cursor:pointer;" onclick="alert('Transferring to JazzCash/Bank...')">WITHDRAW TO BANK/JAZZCASH</button>` : ''}
+            </div>
+        </body>
+    `);
+});
+
+module.exports = app;
