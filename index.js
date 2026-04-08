@@ -2,16 +2,17 @@ const express = require('express');
 const cors = require('cors');
 const { Storage } = require('@google-cloud/storage');
 const vision = require('@google-cloud/vision');
+// ✅ Stripe initialization top par honi chahiye
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🛡️ THE OMEGA DATABASE (Cloud Logic)
+// 🛡️ THE OMEGA DATABASE
 let activeNodes = [];
 const REVENUE_PER_NODE = 5000000;
-const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786"; // 🔑 Your Admin Key
+const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786"; 
 
 // 🔌 GOOGLE CLOUD CONFIG
 const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
@@ -28,25 +29,23 @@ async function scanAsset(imageUrl) {
     }
 }
 
-// 🔌 THE JUDGE & AUDITOR: Secure Handshake
+// 🔌 THE HANDSHAKE ENDPOINT
 app.post('/api/website-handshake', async (req, res) => {
     const { fullName, companyName, email, type, plan, imageUrl } = req.body;
 
-    // 1. AUDITOR: Email Duplicate Check
     const alreadyExists = activeNodes.find(n => n.contact === email);
     if (alreadyExists) return res.status(400).json({ error: "ALERT: Entity already secured!" });
 
     try {
         let aiTags = imageUrl ? await scanAsset(imageUrl) : "Verified Data";
         
-        // 2. THE JUDGE: User vs Company Logic
         if (type === 'COMPANY') {
             const session = await stripe.checkout.sessions.create({
                 line_items: [{
                     price_data: {
                         currency: 'usd',
                         product_data: { name: `AXON NODE: ${companyName}` },
-                        unit_amount: 500000000, // $5,000,000
+                        unit_amount: 500000000, 
                     },
                     quantity: 1,
                 }],
@@ -57,7 +56,6 @@ app.post('/api/website-handshake', async (req, res) => {
             return res.json({ url: session.url });
         } 
 
-        // 3. THE MULTIPLIER: Save Node
         const newNode = {
             name: companyName || "Independent Node",
             commander: fullName || "Guest",
@@ -76,12 +74,11 @@ app.post('/api/website-handshake', async (req, res) => {
         res.json({ success: true, message: "MISSION FINISHED: NODE SECURED" });
 
     } catch (error) {
-        console.error("System Error:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
 
-// --- 🖥️ SUPREME COMMAND CENTER UI ---
+// --- 🖥️ COMMAND CENTER UI ---
 app.get('/', (req, res) => {
     const isAdmin = req.query.key === PLATFORM_MASTER_KEY;
 
@@ -99,7 +96,7 @@ app.get('/', (req, res) => {
                 <h1>🛡️ AXON COMMAND CENTER</h1>
                 <p style="color:#0f0;">SYSTEM STATUS: ${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}</p>
                 <div style="display:flex; justify-content:space-around; margin:30px 0; border-bottom:1px solid #222; padding-bottom:20px;">
-                    <div><p>NODES</p><h2>${activeNodes.length} / 200</h2></div>
+                    <div><p>NODES</p><h2>${activeNodes.length}</h2></div>
                     <div><p>REVENUE</p><h2 style="color:#0f0;">$${(activeNodes.length * REVENUE_PER_NODE).toLocaleString()}</h2></div>
                 </div>
                 <div style="background:#111; border:1px solid gold; height:300px; overflow-y:auto; padding:15px;">${nodesList}</div>
