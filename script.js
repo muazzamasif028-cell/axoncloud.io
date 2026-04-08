@@ -22,3 +22,17 @@ async function syncDashboard() {
 // Har 1 minute baad check karega
 setInterval(syncDashboard, 60000);
 syncDashboard();
+async function activateNode() {
+  const company = document.getElementById('companyInput').value; // Input box se naam uthayega
+  
+  const response = await fetch('/api/activate-node', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ companyName: company })
+  });
+
+  if (response.ok) {
+    alert(`COMMANDER: Node for ${company} is now SECURED in Google Cloud!`);
+    // Dashboard ka status update karne ka code yahan ayega
+  }
+}
