@@ -3,7 +3,8 @@ const cors = require('cors');
 const { Storage } = require('@google-cloud/storage');
 const vision = require('@google-cloud/vision');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_123');
-const { GoogleGenerativeAI } = require("@google-generative-ai");
+// ✅ FIXED: Yahan '-' ki jagah '/' aana chahiye tha
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 app.use(cors());
@@ -63,6 +64,9 @@ app.get('/', (req, res) => {
                 <div style="display:flex; justify-content:space-around; margin:30px 0;">
                     <div><p>NODES</p><h2>${count}</h2></div>
                     <div><p>REVENUE</p><h2 style="color:#0f0;">$${totalRev}</h2></div>
+                </div>
+                <div style="margin-top:20px; color:#555; font-size:12px;">
+                    Last Updated: ${new Date().toLocaleTimeString()}
                 </div>
             </div>
         </body>
