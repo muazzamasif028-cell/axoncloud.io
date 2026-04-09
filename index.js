@@ -8,15 +8,16 @@ app.use(express.json());
 const MASTER_KEY = "MUAZZAM-ALPHA-786";
 
 app.get('/', (req, res) => {
+    // URL se name aur key uthana
     const userKey = req.query.key;
-    // 🛡️ Owner mode agar key master ho ya khali ho (starting mein)
+    const autoName = req.query.name; 
     const isAdmin = !userKey || userKey === MASTER_KEY;
 
     res.send(`
         <!DOCTYPE html>
         <html>
         <head>
-            <title>AXON VAULT SYSTEM</title>
+            <title>AXON COMMAND CENTER</title>
             <style>
                 body { background:#000; color:gold; font-family:monospace; text-align:center; padding:20px; }
                 .vault-box { border:5px double gold; padding:40px; background:#050505; max-width:900px; margin:auto; box-shadow: 0 0 50px gold; }
@@ -24,86 +25,74 @@ app.get('/', (req, res) => {
                 .flat-unit { background:#0a0a0a; border:1px solid #333; margin:15px 0; padding:20px; display:flex; justify-content:space-between; align-items:center; border-left:5px solid gold; text-align:left; }
                 input { background:#000; color:gold; border:1px solid gold; padding:15px; width:60%; }
                 button { background:gold; color:black; border:none; padding:15px 30px; font-weight:bold; cursor:pointer; }
-                .btn-enter { background:transparent; color:gold; border:1px solid gold; padding:10px 20px; cursor:pointer; }
-                .msg { color:cyan; font-size:12px; margin-top:10px; border:1px dashed #333; padding:10px; display:none; }
+                .status-tag { color:#0f0; border:1px solid #0f0; padding:2px 10px; font-size:12px; }
             </style>
         </head>
         <body>
             <div class="vault-box">
-                <h1 style="letter-spacing:5px;">🛡️ AXON VAULT SYSTEM</h1>
-                <p style="color:#0f0; border:1px solid #222; padding:5px; display:inline-block;">
-                    \${isAdmin ? "OWNER CONTROL ACTIVE" : "SECURE CLIENT SESSION"}
-                </p>
+                <h1>🛡️ AXON COMMAND CENTER</h1>
+                <span class="status-tag">\${isAdmin ? 'GOD-MODE' : 'CLIENT-SESSION'}</span>
 
                 <div class="stats">
-                    <div><p style="color:#666;">NODES (FLATS)</p><h2 id="nCnt">0</h2></div>
-                    <div><p style="color:#666;">TOTAL REVENUE</p><h2 id="rCnt" style="color:#0f0;">$0</h2></div>
+                    <div><p style="color:#666;">NODES</p><h2 id="nCnt">0</h2></div>
+                    <div><p style="color:#666;">REVENUE</p><h2 id="rCnt" style="color:#0f0;">$0</h2></div>
                 </div>
 
-                <div style="text-align:left; border-top:1px solid gold; padding-top:20px;">
-                    <h3 style="color:gold;">YOUR SECURE FLAT / ROOMS</h3>
+                <div style="text-align:left;">
+                    <h3 style="color:gold; border-bottom:1px solid #222;">ACTIVE FLATS</h3>
                     <div id="roomList"></div>
                 </div>
 
                 \${isAdmin ? \`
-                <div style="margin-top:40px; background:#080808; padding:20px; border:1px dashed gold;">
-                    <h3>DEPLOY NEW FLAT (NODE)</h3>
-                    <input id="nodeInp" type="text" placeholder="Enter Company Name (e.g. Amazon)">
-                    <button onclick="addNode()">EXECUTE UPLINK</button>
-                    <div id="keyMsg" class="msg"></div>
+                <div style="margin-top:40px; padding:20px; border:1px dashed gold; background:#080808;">
+                    <h3>MANUAL DEPLOYMENT</h3>
+                    <input id="nodeInp" type="text" placeholder="Company Name...">
+                    <button onclick="addNode()">EXECUTE</button>
                 </div>
                 \` : ''}
             </div>
 
             <script>
-                // 🔐 Browser Persistent Memory (Version 4 - Clean State)
-                let db = JSON.parse(localStorage.getItem('axon_vault_v4')) || [];
-                const isAdmin = \${isAdmin};
-                const uKey = "\${userKey}";
+                // 🔐 Data Persistence
+                let db = JSON.parse(localStorage.getItem('axon_linked_v1')) || [];
+                const incomingName = "${autoName || ''}";
 
-                function draw() {
+                function refresh() {
                     const list = document.getElementById('roomList');
-                    
-                    // Logic: Agar aap owner mode mein hain (key nahi hai ya master key hai) toh sab dikhao
-                    // Agar client mode mein hain (koi aur key hai) toh sirf us ID ka data dikhao
-                    const data = (isAdmin && (!uKey || uKey === "${MASTER_KEY}")) ? db : db.filter(x => x.id === uKey);
-                    
-                    document.getElementById('nCnt').innerText = data.length;
-                    document.getElementById('rCnt').innerText = "$" + (data.length * 5000000).toLocaleString();
+                    document.getElementById('nCnt').innerText = db.length;
+                    document.getElementById('rCnt').innerText = "$" + (db.length * 5000000).toLocaleString();
 
-                    if(data.length === 0) {
-                        list.innerHTML = "<p style='color:#444;'>[ NO DATA DETECTED ] - Deploy a node to initialize.</p>";
-                    } else {
-                        list.innerHTML = data.map(node => \`
-                            <div class="flat-unit">
-                                <div>
-                                    <b style="font-size:18px;">🔑 \${node.name.toUpperCase()}</b><br>
-                                    <small style="color:#444;">SECURITY ID: \${node.id}</small>
-                                </div>
-                                <button class="btn-enter" onclick="location.href='/room/\${node.id}'">ENTER FLAT</button>
-                            </div>
-                        \`).join('');
-                    }
+                    list.innerHTML = db.map(node => \`
+                        <div class="flat-unit">
+                            <span>🔑 <b>\${node.name.toUpperCase()}</b><br><small style="color:#444;">ID: \${node.id}</small></span>
+                            <button style="background:transparent; color:gold; border:1px solid gold; padding:5px 15px; cursor:pointer;" onclick="location.href='/room/\${node.id}'">ENTER</button>
+                        </div>
+                    \`).join('');
                 }
 
-                function addNode() {
-                    const val = document.getElementById('nodeInp').value;
+                function addNode(name) {
+                    const val = name || document.getElementById('nodeInp').value;
                     if(!val) return;
                     
+                    // Check duplicate
+                    if(db.some(x => x.name.toLowerCase() === val.toLowerCase())) return;
+
                     const id = 'AXON-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-                    db.push({ id: id, name: val, time: new Date().toLocaleTimeString() });
+                    db.push({ id: id, name: val });
+                    localStorage.setItem('axon_linked_v1', JSON.stringify(db));
                     
-                    localStorage.setItem('axon_vault_v4', JSON.stringify(db));
-                    
-                    const msg = document.getElementById('keyMsg');
-                    msg.style.display = "block";
-                    msg.innerText = "CLIENT LINK: " + window.location.origin + "/?key=" + id;
-                    
-                    document.getElementById('nodeInp').value = "";
-                    draw();
+                    if(!name) document.getElementById('nodeInp').value = "";
+                    refresh();
                 }
 
-                draw();
+                // ⚡ AUTO-LINK: Agar website se name aaya hai toh deploy karo
+                if(incomingName) {
+                    addNode(incomingName);
+                    // URL saaf karna taake baar baar add na ho
+                    window.history.replaceState({}, document.title, "/");
+                }
+
+                refresh();
             </script>
         </body>
         </html>
@@ -111,7 +100,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/room/:id', (req, res) => {
-    res.send("<body style='background:#000;color:cyan;text-align:center;padding-top:100px;font-family:monospace;'><h1>VAULT ACCESS GRANTED</h1><button onclick='history.back()'>EXIT ROOM</button></body>");
+    res.send("<body style='background:#000;color:cyan;text-align:center;padding-top:100px;'><h1>VAULT ACCESS GRANTED</h1><button onclick='history.back()'>EXIT</button></body>");
 });
 
 module.exports = app;
