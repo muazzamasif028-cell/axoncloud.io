@@ -3,7 +3,6 @@ const cors = require('cors');
 const { Storage } = require('@google-cloud/storage');
 const vision = require('@google-cloud/vision');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_123');
-// ✅ FIXED: Yahan '-' ki jagah '/' aana chahiye tha
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
@@ -15,12 +14,19 @@ let activeNodes = [];
 const REVENUE_PER_NODE = 5000000;
 const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786";
 
-// AI Initialization
-const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+// AI Initialization (Safe Mode)
+let genAI = null;
+if (process.env.GEMINI_API_KEY) {
+    try {
+        genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    } catch (e) {
+        console.error("AI Init Failed");
+    }
+}
 
-// 🤖 AI CHAT ENGINE (Automation)
+// 🤖 AI CHAT ENGINE
 app.post('/api/chat', async (req, res) => {
-    if (!genAI) return res.status(500).json({ error: "GEMINI_API_KEY Missing in Vercel" });
+    if (!genAI) return res.status(500).json({ error: "GEMINI_API_KEY Missing" });
     const { prompt } = req.body;
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
@@ -32,7 +38,7 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// 🔌 THE HANDSHAKE (Data Storage)
+// 🔌 THE HANDSHAKE
 app.post('/api/website-handshake', async (req, res) => {
     const { fullName, companyName, email, plan } = req.body;
     try {
@@ -44,13 +50,13 @@ app.post('/api/website-handshake', async (req, res) => {
             timestamp: new Date().toLocaleString()
         };
         activeNodes.push(newNode);
-        res.json({ success: true, message: "MISSION FINISHED" });
+        res.json({ success: true, message: "NODE SECURED" });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Handshake Failed" });
     }
 });
 
-// 🖥️ COMMAND CENTER UI (The Dashboard)
+// 🖥️ COMMAND CENTER UI
 app.get('/', (req, res) => {
     const isAdmin = req.query.key === PLATFORM_MASTER_KEY;
     const count = activeNodes.length;
@@ -65,13 +71,10 @@ app.get('/', (req, res) => {
                     <div><p>NODES</p><h2>${count}</h2></div>
                     <div><p>REVENUE</p><h2 style="color:#0f0;">$${totalRev}</h2></div>
                 </div>
-                <div style="margin-top:20px; color:#555; font-size:12px;">
-                    Last Updated: ${new Date().toLocaleTimeString()}
-                </div>
+                <p style="color:#444; font-size:10px;">Build ID: 20260409-FINAL</p>
             </div>
         </body>
     `);
 });
 
-// ✅ FINAL EXPORT
 module.exports = app;
