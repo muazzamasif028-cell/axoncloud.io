@@ -13,7 +13,7 @@ let activeNodes = [];
 const REVENUE_PER_NODE = 5000000;
 const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786"; 
 
-// 🔌 GOOGLE CLOUD CONFIG (CRASH-PROOF BYPASS PROTOCOL)
+// 🔌 GOOGLE CLOUD CONFIG (CRASH-PROOF PROTOCOL)
 const gConfig = {
     projectId: process.env.G_PROJECT_ID,
     credentials: {
@@ -73,7 +73,7 @@ app.post('/api/website-handshake', async (req, res) => {
             status: "SECURED"
         };
 
-        // Saving to Storage
+        // Saving to Storage Vault
         try {
             const bucket = storage.bucket('axon-nodes-vault');
             const blob = bucket.file(`${newNode.name}-${Date.now()}.json`);
@@ -107,16 +107,7 @@ app.get('/', (req, res) => {
         <body style="background:#000; color:gold; font-family:monospace; text-align:center; padding:50px;">
             <div style="border:5px double gold; padding:40px; background:#050505; max-width:850px; margin:auto;">
                 <h1>🛡️ AXON COMMAND CENTER</h1>
-                <p style="color:#0f0;">SYSTEM STATUS: \${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}</p>
+                <p style="color:#0f0;">SYSTEM STATUS: ${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}</p>
                 <div style="display:flex; justify-content:space-around; margin:30px 0; border-bottom:1px solid #222; padding-bottom:20px;">
-                    <div><p>NODES</p><h2>\${activeNodes.length}</h2></div>
-                    <div><p>REVENUE</p><h2 style="color:#0f0;">$\${(activeNodes.length * REVENUE_PER_NODE).toLocaleString()}</h2></div>
-                </div>
-                <div style="background:#111; border:1px solid gold; height:300px; overflow-y:auto; padding:15px;">\${nodesList}</div>
-                \${isAdmin ? \`<button style="background:lime; color:black; padding:15px; width:100%; margin-top:20px; font-weight:bold; cursor:pointer;" onclick="alert('Transferring to JazzCash/Bank...')">WITHDRAW TO BANK/JAZZCASH</button>\` : ''}
-            </div>
-        </body>
-    `);
-});
-
-module.exports = app;
+                    <div><p>NODES</p><h2>${activeNodes.length}</h2></div>
+                    <div><p>REVENUE</p><h2 style="
