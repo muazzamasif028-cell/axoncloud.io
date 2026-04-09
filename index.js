@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-// ✅ SAHI: Slash (/) wala rasta
+// ✅ FIXED: Sahi library name slash (/) ke sath
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
@@ -26,11 +26,11 @@ app.get('/', (req, res) => {
             <div style="border:5px double gold; padding:40px; background:#050505; max-width:850px; margin:auto;">
                 <h1>🛡️ AXON COMMAND CENTER</h1>
                 <p style="color:#0f0; border:1px solid #222; padding:10px; display:inline-block;">
-                    STATUS: ${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}
+                    STATUS: \${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}
                 </p>
                 <div style="display:flex; justify-content:space-around; margin:30px 0;">
-                    <div><p>NODES</p><h2>${count}</h2></div>
-                    <div><p>REVENUE</p><h2 style="color:#0f0;">$${totalRev}</h2></div>
+                    <div><p style="color:#666;">NODES</p><h2>\${count}</h2></div>
+                    <div><p style="color:#666;">REVENUE</p><h2 style="color:#0f0;">$\${totalRev}</h2></div>
                 </div>
             </div>
         </body>
@@ -39,7 +39,7 @@ app.get('/', (req, res) => {
 
 // --- AI CHAT ENGINE ---
 app.post('/api/chat', async (req, res) => {
-    if (!genAI) return res.status(500).json({ error: "GEMINI_API_KEY Missing" });
+    if (!genAI) return res.status(500).json({ error: "GEMINI_API_KEY Missing in Vercel" });
     const { prompt } = req.body;
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
@@ -51,5 +51,5 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// ✅ VERCEL EXPORT (Iske niche kuch nahi hona chahiye)
+// ✅ FINAL EXPORT: Iske niche kuch nahi hona chahiye
 module.exports = app;
