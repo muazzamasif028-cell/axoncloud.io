@@ -10,7 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🛡️ THE OMEGA DATABASE
+// 🛡️ THE OMEGA DATABASE (Temporary In-Memory)
 let activeNodes = [];
 const REVENUE_PER_NODE = 5000000;
 const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786";
@@ -44,7 +44,7 @@ app.post('/api/website-handshake', async (req, res) => {
             timestamp: new Date().toLocaleString()
         };
         activeNodes.push(newNode);
-        res.json({ success: true, message: "MISSION FINISHED" });
+        res.json({ success: true, message: "MISSION FINISHED: NODE SECURED" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -59,19 +59,21 @@ app.get('/', (req, res) => {
     res.send(`
         <body style="background:#000; color:gold; font-family:monospace; text-align:center; padding:50px;">
             <div style="border:5px double gold; padding:40px; background:#050505; max-width:850px; margin:auto;">
-                <h1>🛡️ AXON COMMAND CENTER</h1>
-                <p style="color:#0f0;">STATUS: ${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}</p>
-                <div style="display:flex; justify-content:space-around; margin:30px 0;">
-                    <div><p>NODES</p><h2>${count}</h2></div>
-                    <div><p>REVENUE</p><h2 style="color:#0f0;">$${totalRev}</h2></div>
+                <h1 style="letter-spacing:5px;">🛡️ AXON COMMAND CENTER</h1>
+                <p style="color:#0f0; border:1px solid #222; padding:10px; display:inline-block;">
+                    STATUS: ${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}
+                </p>
+                <div style="display:flex; justify-content:space-around; margin:30px 0; border-top:1px solid #222; padding-top:20px;">
+                    <div><p style="color:#666;">ACTIVE NODES</p><h2 style="font-size:40px;">${count}</h2></div>
+                    <div><p style="color:#666;">TOTAL REVENUE</p><h2 style="color:#0f0; font-size:40px;">$${totalRev}</h2></div>
                 </div>
-                <div style="margin-top:20px; color:#333; font-size:10px;">
-                    AXON-CORE v3.5.0 | Build: 2026-04-09
+                <div style="color:#333; font-size:10px; margin-top:20px;">
+                    AXON-CORE v3.5.0 | Last Deploy: 9-APR-2026
                 </div>
             </div>
         </body>
     `);
 });
 
-// ✅ FINAL EXPORT (Must be at the very bottom)
+// ✅ FINAL EXPORT
 module.exports = app;
