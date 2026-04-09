@@ -13,12 +13,19 @@ let activeNodes = [];
 const REVENUE_PER_NODE = 5000000;
 const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786"; 
 
-// 🔌 GOOGLE CLOUD CONFIG (CRASH-PROOF PROTOCOL)
+// 🔌 THE ULTIMATE BYPASS CONFIG (Safely cleans the Private Key)
+const getCleanKey = () => {
+    const rawKey = process.env.G_PRIVATE_KEY;
+    if (!rawKey) return undefined;
+    // Yeh line breaks aur escape characters ko auto-fix karega
+    return rawKey.replace(/\\n/g, '\n').replace(/\n/g, '\n');
+};
+
 const gConfig = {
     projectId: process.env.G_PROJECT_ID,
     credentials: {
         client_email: process.env.G_CLIENT_EMAIL,
-        private_key: process.env.G_PRIVATE_KEY ? process.env.G_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
+        private_key: getCleanKey(),
     },
 };
 
@@ -97,9 +104,9 @@ app.get('/', (req, res) => {
 
     let nodesList = activeNodes.map(node => `
         <div style="border-bottom:1px solid #333; padding:15px; text-align:left;">
-            <span style="color:#0f0;">[${node.timestamp}]</span> 
-            <b style="color:gold;">${node.name}</b> (${node.plan})
-            <br><small style="color:#888;">AI Tags: ${node.tags} | Commander: ${node.commander}</small>
+            <span style="color:#0f0;">[\${node.timestamp}]</span> 
+            <b style="color:gold;">\${node.name}</b> (\${node.plan})
+            <br><small style="color:#888;">AI Tags: \${node.tags} | Commander: \${node.commander}</small>
         </div>
     `).reverse().join('') || "<p style='color:#444;'>Waiting for Handshakes...</p>";
 
@@ -107,7 +114,16 @@ app.get('/', (req, res) => {
         <body style="background:#000; color:gold; font-family:monospace; text-align:center; padding:50px;">
             <div style="border:5px double gold; padding:40px; background:#050505; max-width:850px; margin:auto;">
                 <h1>🛡️ AXON COMMAND CENTER</h1>
-                <p style="color:#0f0;">SYSTEM STATUS: ${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}</p>
+                <p style="color:#0f0;">SYSTEM STATUS: \${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}</p>
                 <div style="display:flex; justify-content:space-around; margin:30px 0; border-bottom:1px solid #222; padding-bottom:20px;">
-                    <div><p>NODES</p><h2>${activeNodes.length}</h2></div>
-                    <div><p>REVENUE</p><h2 style="
+                    <div><p>NODES</p><h2>\${activeNodes.length}</h2></div>
+                    <div><p>REVENUE</p><h2 style="color:#0f0;">$\${(activeNodes.length * REVENUE_PER_NODE).toLocaleString()}</h2></div>
+                </div>
+                <div style="background:#111; border:1px solid gold; height:300px; overflow-y:auto; padding:15px;">\${nodesList}</div>
+                \${isAdmin ? \`<button style="background:lime; color:black; padding:15px; width:100%; margin-top:20px; font-weight:bold; cursor:pointer;" onclick="alert('Transferring to JazzCash/Bank...')">WITHDRAW TO BANK/JAZZCASH</button>\` : ''}
+            </div>
+        </body>
+    `);
+});
+
+module.exports = app;
