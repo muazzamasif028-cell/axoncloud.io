@@ -2,20 +2,22 @@ const express = require('express');
 const cors = require('cors');
 const { Storage } = require('@google-cloud/storage');
 const vision = require('@google-cloud/vision');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_123');
 const { GoogleGenerativeAI } = require("@google-generative-ai");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🛡️ THE OMEGA DATABASE & AI ENGINE
+// 🛡️ THE OMEGA DATABASE & AI CONFIG
 let activeNodes = [];
 const REVENUE_PER_NODE = 5000000;
-const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786"; 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786";
 
-// 🔌 GOOGLE CLOUD CONFIG
+// AI Initialization (Isse crash nahi hoga agar key missing ho)
+const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+
+// 🔌 GOOGLE CLOUD CONFIG (For Vision & Storage)
 const getCleanKey = () => {
     const rawKey = process.env.G_PRIVATE_KEY;
     if (!rawKey) return undefined;
@@ -33,7 +35,7 @@ const gConfig = {
 const storage = new Storage(gConfig);
 const visionClient = new vision.ImageAnnotatorClient(gConfig);
 
-// 👁️ AXON-VISION
+// 👁️ AXON-VISION: Image Scanner
 async function scanAsset(imageUrl) {
     try {
         const [result] = await visionClient.labelDetection(imageUrl);
@@ -41,8 +43,9 @@ async function scanAsset(imageUrl) {
     } catch (e) { return "Scan Offline"; }
 }
 
-// 🤖 AI CHAT ENGINE
+// 🤖 AI CHATBOT ENGINE (The Brain)
 app.post('/api/chat', async (req, res) => {
+    if (!genAI) return res.status(500).json({ error: "GEMINI_API_KEY Missing in Vercel" });
     const { prompt } = req.body;
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
@@ -54,7 +57,7 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// 🔌 THE HANDSHAKE
+// 🔌 THE HANDSHAKE (Automation Input)
 app.post('/api/website-handshake', async (req, res) => {
     const { fullName, companyName, email, plan, imageUrl } = req.body;
     try {
@@ -68,13 +71,13 @@ app.post('/api/website-handshake', async (req, res) => {
             timestamp: new Date().toLocaleString()
         };
         activeNodes.push(newNode);
-        res.json({ success: true, message: "MISSION FINISHED" });
+        res.json({ success: true, message: "NODE SECURED" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// 🖥️ COMMAND CENTER UI
+// 🖥️ COMMAND CENTER UI (The Golden Dashboard)
 app.get('/', (req, res) => {
     const isAdmin = req.query.key === PLATFORM_MASTER_KEY;
     const count = activeNodes.length;
@@ -94,5 +97,5 @@ app.get('/', (req, res) => {
     `);
 });
 
-// ✅ YE LINE BRACKETS SE BAHAR HONI CHAHIYE - AB THEEK HAI
+// ✅ FINAL EXPORT (Must be outside all brackets)
 module.exports = app;
