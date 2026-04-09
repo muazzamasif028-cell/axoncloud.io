@@ -15,7 +15,7 @@ const REVENUE_PER_NODE = 5000000;
 const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786"; 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// 🔌 GOOGLE CLOUD CONFIG (AUTO-CLEAN PROTOCOL)
+// 🔌 GOOGLE CLOUD CONFIG
 const getCleanKey = () => {
     const rawKey = process.env.G_PRIVATE_KEY;
     if (!rawKey) return undefined;
@@ -33,7 +33,7 @@ const gConfig = {
 const storage = new Storage(gConfig);
 const visionClient = new vision.ImageAnnotatorClient(gConfig);
 
-// 👁️ AXON-VISION: Image Analysis
+// 👁️ AXON-VISION
 async function scanAsset(imageUrl) {
     try {
         const [result] = await visionClient.labelDetection(imageUrl);
@@ -41,7 +41,7 @@ async function scanAsset(imageUrl) {
     } catch (e) { return "Scan Offline"; }
 }
 
-// 🤖 AI CHATBOT ENDPOINT (Where the magic happens)
+// 🤖 AI CHATBOT ENGINE (Automation Brain)
 app.post('/api/chat', async (req, res) => {
     const { prompt } = req.body;
     try {
@@ -54,7 +54,7 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// 🔌 THE HANDSHAKE (Data Storage)
+// 🔌 THE HANDSHAKE
 app.post('/api/website-handshake', async (req, res) => {
     const { fullName, companyName, email, plan, imageUrl } = req.body;
     try {
@@ -74,7 +74,7 @@ app.post('/api/website-handshake', async (req, res) => {
     }
 });
 
-// --- 🖥️ COMMAND CENTER UI ---
+// 🖥️ COMMAND CENTER UI
 app.get('/', (req, res) => {
     const isAdmin = req.query.key === PLATFORM_MASTER_KEY;
     const count = activeNodes.length;
@@ -90,12 +90,12 @@ app.get('/', (req, res) => {
                     <div><p>REVENUE</p><h2 style="color:#0f0;">$${totalRev}</h2></div>
                 </div>
                 <div style="background:#111; border:1px solid gold; height:150px; padding:15px; color:#666; overflow-y:auto;">
-                    ${count > 0 ? 'All Systems Online. Monitoring Handshakes...' : 'Waiting for Handshakes...'}
+                    ${count > 0 ? 'All Systems Online.' : 'Waiting for Handshakes...'}
                 </div>
-                ${isAdmin ? '<button style="background:lime; color:black; padding:15px; width:100%; margin-top:20px; font-weight:bold; cursor:pointer;" onclick="alert(\'Transferring Funds...\')">WITHDRAW TO BANK/JAZZCASH</button>' : ''}
             </div>
         </body>
     `);
 });
 
+// ✅ SAB SE AAKHIR MEIN - NO ERROR!
 module.exports = app;
