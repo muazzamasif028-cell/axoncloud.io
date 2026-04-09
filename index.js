@@ -9,41 +9,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🛡️ THE OMEGA DATABASE & AI CONFIG
+// 🛡️ THE OMEGA DATABASE
 let activeNodes = [];
 const REVENUE_PER_NODE = 5000000;
 const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786";
 
-// AI Initialization (Isse crash nahi hoga agar key missing ho)
+// AI Initialization
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
 
-// 🔌 GOOGLE CLOUD CONFIG (For Vision & Storage)
-const getCleanKey = () => {
-    const rawKey = process.env.G_PRIVATE_KEY;
-    if (!rawKey) return undefined;
-    return rawKey.replace(/\\n/g, '\n').replace(/\n/g, '\n');
-};
-
-const gConfig = {
-    projectId: process.env.G_PROJECT_ID,
-    credentials: {
-        client_email: process.env.G_CLIENT_EMAIL,
-        private_key: getCleanKey(),
-    },
-};
-
-const storage = new Storage(gConfig);
-const visionClient = new vision.ImageAnnotatorClient(gConfig);
-
-// 👁️ AXON-VISION: Image Scanner
-async function scanAsset(imageUrl) {
-    try {
-        const [result] = await visionClient.labelDetection(imageUrl);
-        return result.labelAnnotations.map(label => label.description).slice(0, 3).join(', ');
-    } catch (e) { return "Scan Offline"; }
-}
-
-// 🤖 AI CHATBOT ENGINE (The Brain)
+// 🤖 AI CHAT ENGINE (Automation)
 app.post('/api/chat', async (req, res) => {
     if (!genAI) return res.status(500).json({ error: "GEMINI_API_KEY Missing in Vercel" });
     const { prompt } = req.body;
@@ -57,27 +31,25 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
-// 🔌 THE HANDSHAKE (Automation Input)
+// 🔌 THE HANDSHAKE (Data Storage)
 app.post('/api/website-handshake', async (req, res) => {
-    const { fullName, companyName, email, plan, imageUrl } = req.body;
+    const { fullName, companyName, email, plan } = req.body;
     try {
-        let aiTags = imageUrl ? await scanAsset(imageUrl) : "Verified Data";
         const newNode = {
             name: companyName || "Independent Node",
             commander: fullName || "Guest",
             contact: email,
-            tags: aiTags,
             plan: plan || "BASIC",
             timestamp: new Date().toLocaleString()
         };
         activeNodes.push(newNode);
-        res.json({ success: true, message: "NODE SECURED" });
+        res.json({ success: true, message: "MISSION FINISHED" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// 🖥️ COMMAND CENTER UI (The Golden Dashboard)
+// 🖥️ COMMAND CENTER UI (The Dashboard)
 app.get('/', (req, res) => {
     const isAdmin = req.query.key === PLATFORM_MASTER_KEY;
     const count = activeNodes.length;
@@ -97,5 +69,5 @@ app.get('/', (req, res) => {
     `);
 });
 
-// ✅ FINAL EXPORT (Must be outside all brackets)
+// ✅ FINAL EXPORT
 module.exports = app;
