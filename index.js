@@ -41,7 +41,7 @@ async function scanAsset(imageUrl) {
     } catch (e) { return "Scan Offline"; }
 }
 
-// 🤖 AI CHATBOT ENGINE (Automation Brain)
+// 🤖 AI CHAT ENGINE
 app.post('/api/chat', async (req, res) => {
     const { prompt } = req.body;
     try {
@@ -50,7 +50,7 @@ app.post('/api/chat', async (req, res) => {
         const response = await result.response;
         res.json({ reply: response.text() });
     } catch (error) {
-        res.status(500).json({ error: "AI Offline: Check GEMINI_API_KEY" });
+        res.status(500).json({ error: "AI Engine Offline" });
     }
 });
 
@@ -68,7 +68,7 @@ app.post('/api/website-handshake', async (req, res) => {
             timestamp: new Date().toLocaleString()
         };
         activeNodes.push(newNode);
-        res.json({ success: true, message: "MISSION FINISHED: NODE SECURED" });
+        res.json({ success: true, message: "MISSION FINISHED" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -84,18 +84,15 @@ app.get('/', (req, res) => {
         <body style="background:#000; color:gold; font-family:monospace; text-align:center; padding:50px;">
             <div style="border:5px double gold; padding:40px; background:#050505; max-width:850px; margin:auto;">
                 <h1>🛡️ AXON COMMAND CENTER</h1>
-                <p style="color:#0f0;">SYSTEM STATUS: ${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}</p>
-                <div style="display:flex; justify-content:space-around; margin:30px 0; border-bottom:1px solid #222; padding-bottom:20px;">
+                <p style="color:#0f0;">STATUS: ${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}</p>
+                <div style="display:flex; justify-content:space-around; margin:30px 0;">
                     <div><p>NODES</p><h2>${count}</h2></div>
                     <div><p>REVENUE</p><h2 style="color:#0f0;">$${totalRev}</h2></div>
-                </div>
-                <div style="background:#111; border:1px solid gold; height:150px; padding:15px; color:#666; overflow-y:auto;">
-                    ${count > 0 ? 'All Systems Online.' : 'Waiting for Handshakes...'}
                 </div>
             </div>
         </body>
     `);
 });
 
-// ✅ SAB SE AAKHIR MEIN - NO ERROR!
+// ✅ YE LINE BRACKETS SE BAHAR HONI CHAHIYE - AB THEEK HAI
 module.exports = app;
