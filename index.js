@@ -5,102 +5,100 @@ const app = express();
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-// 🛡️ DATA STORAGE (In-Memory for now)
-let activeNodes = [];
+// 🛡️ DATA VAULT (Memory + Persistence Logic)
+let activeNodes = []; 
 const REVENUE_PER_NODE = 5000000;
 const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786";
 
-// --- 🖥️ SMART DASHBOARD ---
+// --- 🖥️ SUPREME COMMAND CENTER ---
 app.get('/', (req, res) => {
     const userKey = req.query.key;
     const isAdmin = userKey === PLATFORM_MASTER_KEY;
-    
-    // FILTER LOGIC: Admin ko sab dikhega, Client ko sirf apna ID
-    let displayNodes = isAdmin ? activeNodes : activeNodes.filter(n => n.id === userKey);
-    
-    const count = isAdmin ? activeNodes.length : displayNodes.length;
-    const totalRev = (count * REVENUE_PER_NODE).toLocaleString();
 
     res.send(`
         <body style="background:#000; color:gold; font-family:monospace; text-align:center; padding:20px;">
-            <div style="border:5px double gold; padding:40px; background:#050505; max-width:1000px; margin:auto;">
-                <h1>🛡️ AXON VAULT SYSTEM</h1>
-                <p style="color:#0f0;">${isAdmin ? 'OWNER ACCESS: ALL ROOMS VISIBLE' : 'SECURE SESSION ACTIVE'}</p>
-
-                <div style="display:flex; justify-content:space-around; margin:30px 0; background:#111; padding:20px;">
-                    <div><p>NODES</p><h2>${count}</h2></div>
-                    <div><p>REVENUE</p><h2 style="color:#0f0;">$${totalRev}</h2></div>
+            <div style="border:5px double gold; padding:40px; background:#050505; max-width:1000px; margin:auto; box-shadow: 0 0 50px gold;">
+                <h1 style="letter-spacing:10px; text-shadow: 0 0 10px gold;">🛡️ AXON SECURE VAULT</h1>
+                
+                <div id="statsSection" style="display:flex; justify-content:space-around; margin:40px 0; background:#111; padding:20px; border:1px solid #222;">
+                    <div><p style="color:#666;">CONNECTED NODES</p><h2 id="nodeCount" style="font-size:40px;">0</h2></div>
+                    <div><p style="color:#666;">TOTAL REVENUE</p><h2 id="revCount" style="color:#0f0; font-size:40px;">$0</h2></div>
                 </div>
 
                 <div style="text-align:left; border-top:1px solid gold; padding-top:20px;">
-                    <h3>${isAdmin ? 'ALL REGISTERED COMPANIES' : 'YOUR SECURE GATEWAY'}</h3>
-                    <div id="roomContainer">
-                        ${displayNodes.map(node => `
-                            <div style="margin:10px 0; padding:15px; border:1px solid #222; display:flex; justify-content:space-between; align-items:center;">
-                                <span>[${node.time}] <b>${node.name}</b></span>
-                                <button onclick="window.location.href='/room/${node.id}'" 
-                                    style="background:gold; color:black; border:none; padding:10px 20px; font-weight:bold; cursor:pointer;">
-                                    ENTER ROOM
-                                </button>
-                            </div>
-                        `).join('')}
-                    </div>
+                    <h3 id="viewTitle">INITIALIZING SECURE UPLINK...</h3>
+                    <div id="roomContainer"></div>
                 </div>
 
                 ${isAdmin ? `
-                <div style="margin-top:30px; border:1px dashed gold; padding:20px;">
-                    <h3>DEPLOY NEW CLIENT NODE</h3>
-                    <input id="cName" type="text" placeholder="Company Name..." style="padding:10px;">
-                    <button onclick="deploy()" style="padding:10px; background:gold;">GENERATE SECURE KEY</button>
-                    <p id="newKey" style="color:cyan;"></p>
+                <div style="margin-top:40px; background:#0a0a0a; border:1px dashed gold; padding:20px;">
+                    <h3>OWNER PANEL: DEPLOY NEW CLIENT</h3>
+                    <input id="cName" type="text" placeholder="Company Name..." style="background:#000; color:gold; border:1px solid gold; padding:15px; width:60%;">
+                    <button onclick="deploy()" style="background:gold; color:#000; padding:15px; border:none; font-weight:bold; cursor:pointer;">GENERATE KEY</button>
+                    <p id="newKey" style="color:cyan; margin-top:10px;"></p>
                 </div>
                 ` : ''}
             </div>
 
             <script>
+                // 🔐 PERSISTENCE LOGIC: Data ko browser mein save rakhna
+                let localData = JSON.parse(localStorage.getItem('axon_vault')) || [];
+                const isAdmin = ${isAdmin};
+                const userKey = "${userKey}";
+
+                function updateUI() {
+                    const container = document.getElementById('roomContainer');
+                    const filtered = isAdmin ? localData : localData.filter(n => n.id === userKey);
+                    
+                    document.getElementById('nodeCount').innerText = filtered.length;
+                    document.getElementById('revCount').innerText = "$" + (filtered.length * 5000000).toLocaleString();
+                    document.getElementById('viewTitle').innerText = isAdmin ? "ALL CLIENT ROOMS" : "YOUR PRIVATE ACCESS";
+
+                    container.innerHTML = filtered.map(node => \`
+                        <div style="margin:15px 0; padding:20px; border:1px solid #222; background:#080808; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid gold;">
+                            <div>
+                                <b style="font-size:18px; color:gold;">\${node.name}</b><br>
+                                <small style="color:#444;">ID: \${node.id} | DEPLOYED: \${node.time}</small>
+                            </div>
+                            <button onclick="window.location.href='/room/\${node.id}'" 
+                                style="background:transparent; color:gold; border:1px solid gold; padding:10px 20px; cursor:pointer; font-weight:bold; transition: 0.3s;"
+                                onmouseover="this.style.background='gold'; this.style.color='black';"
+                                onmouseout="this.style.background='transparent'; this.style.color='gold';">
+                                ACCESS ROOM
+                            </button>
+                        </div>
+                    \`).join('');
+                }
+
                 async function deploy() {
                     const name = document.getElementById('cName').value;
-                    const id = 'AXON-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-                    await fetch('/api/website-handshake', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ companyName: name, id: id })
-                    });
-                    document.getElementById('newKey').innerText = "SHARE THIS KEY WITH CLIENT: ?key=" + id;
-                    setTimeout(() => location.reload(), 3000);
+                    if(!name) return;
+                    const id = 'AXON-' + Math.random().toString(36).substr(2, 5).toUpperCase();
+                    const entry = { id: id, name: name, time: new Date().toLocaleTimeString() };
+                    
+                    localData.push(entry);
+                    localStorage.setItem('axon_vault', JSON.stringify(localData));
+                    document.getElementById('newKey').innerText = "COPY THIS LINK FOR CLIENT: ?key=" + id;
+                    updateUI();
                 }
+
+                updateUI();
             </script>
         </body>
     `);
 });
 
-// --- 🔑 THE INDIVIDUAL ROOM (Flat Entry) ---
+// --- 🚪 THE PRIVATE ROOM ---
 app.get('/room/:id', (req, res) => {
-    const node = activeNodes.find(n => n.id === req.params.id);
-    if (!node) return res.send("<h1>403: ACCESS DENIED</h1>");
-
     res.send(`
-        <body style="background:#050505; color:cyan; font-family:monospace; text-align:center; padding:100px;">
-            <div style="border:2px solid cyan; padding:50px; display:inline-block;">
-                <h1>WELCOME TO ${node.name.toUpperCase()} VAULT</h1>
-                <p>STATUS: PRIVACY ENCRYPTED</p>
-                <hr>
-                <p>Internal Data, Services, and Logs for ${node.name} only.</p>
-                <button onclick="window.history.back()" style="background:cyan; border:none; padding:10px;">EXIT ROOM</button>
+        <body style="background:#000; color:cyan; font-family:monospace; text-align:center; padding-top:100px;">
+            <div style="border:2px solid cyan; display:inline-block; padding:50px; box-shadow: 0 0 20px cyan;">
+                <h1>ACCESS GRANTED: ROOM \${req.params.id}</h1>
+                <p>Welcome to your encrypted workspace.</p>
+                <button onclick="window.history.back()" style="background:cyan; color:black; border:none; padding:10px 20px; cursor:pointer;">EXIT VAULT</button>
             </div>
         </body>
     `);
-});
-
-// --- 🔌 HANDSHAKE WITH UNIQUE ID ---
-app.post('/api/website-handshake', (req, res) => {
-    const { companyName, id } = req.body;
-    activeNodes.push({
-        id: id || 'EXT-' + Date.now(),
-        name: companyName,
-        time: new Date().toLocaleTimeString()
-    });
-    res.json({ success: true });
 });
 
 module.exports = app;
