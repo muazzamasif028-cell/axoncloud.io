@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const { Storage } = require('@google-cloud/storage');
 const vision = require('@google-cloud/vision');
-// ✅ Stripe initialization top par honi chahiye
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
@@ -14,10 +13,30 @@ let activeNodes = [];
 const REVENUE_PER_NODE = 5000000;
 const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786"; 
 
-// 🔌 GOOGLE CLOUD CONFIG
-const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
-const storage = new Storage({ projectId: 'linear-pursuit-492616-i8', credentials });
-const visionClient = new vision.ImageAnnotatorClient({ credentials });
+// 🔌 GOOGLE CLOUD CONFIG (THE COMMANDER'S SHIELD)
+let googleCredentials;
+try {
+    const rawCreds = process.env.GOOGLE_CREDENTIALS;
+    if (!rawCreds) throw new Error("GOOGLE_CREDENTIALS environment variable is missing!");
+    
+    googleCredentials = JSON.parse(rawCreds);
+    
+    // 🛡️ Fix for Private Key (The \n Issue in Vercel)
+    if (googleCredentials.private_key) {
+        googleCredentials.private_key = googleCredentials.private_key.replace(/\\n/g, '\n');
+    }
+} catch (err) {
+    console.error("CRITICAL: Failed to parse Google Credentials ->", err.message);
+}
+
+const storage = new Storage({ 
+    projectId: 'linear-pursuit-492616-i8', 
+    credentials: googleCredentials 
+});
+
+const visionClient = new vision.ImageAnnotatorClient({ 
+    credentials: googleCredentials 
+});
 
 // 👁️ AXON-VISION: Image Analysis
 async function scanAsset(imageUrl) {
@@ -25,6 +44,7 @@ async function scanAsset(imageUrl) {
         const [result] = await visionClient.labelDetection(imageUrl);
         return result.labelAnnotations.map(label => label.description).slice(0, 3).join(', ');
     } catch (e) { 
+        console.error("Vision Scan Error:", e.message);
         return "Scan Offline"; 
     }
 }
@@ -66,14 +86,20 @@ app.post('/api/website-handshake', async (req, res) => {
             status: "SECURED"
         };
 
-        const bucket = storage.bucket('axon-nodes-vault');
-        const blob = bucket.file(`${newNode.name}-${Date.now()}.json`);
-        await blob.save(JSON.stringify(newNode));
+        // Saving to Storage
+        try {
+            const bucket = storage.bucket('axon-nodes-vault');
+            const blob = bucket.file(`${newNode.name}-${Date.now()}.json`);
+            await blob.save(JSON.stringify(newNode));
+        } catch (storageErr) {
+            console.error("Storage Save Failed:", storageErr.message);
+        }
 
         activeNodes.push(newNode);
         res.json({ success: true, message: "MISSION FINISHED: NODE SECURED" });
 
     } catch (error) {
+        console.error("Handshake Error:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
@@ -100,7 +126,7 @@ app.get('/', (req, res) => {
                     <div><p>REVENUE</p><h2 style="color:#0f0;">$${(activeNodes.length * REVENUE_PER_NODE).toLocaleString()}</h2></div>
                 </div>
                 <div style="background:#111; border:1px solid gold; height:300px; overflow-y:auto; padding:15px;">${nodesList}</div>
-                ${isAdmin ? `<button style="background:lime; color:black; padding:15px; width:100%; margin-top:20px; font-weight:bold; cursor:pointer;" onclick="alert('Transferring to JazzCash/Bank...')">WITHDRAW TO BANK/JAZZCASH</button>` : ''}
+                ${isAdmin ? \`<button style="background:lime; color:black; padding:15px; width:100%; margin-top:20px; font-weight:bold; cursor:pointer;" onclick="alert('Transferring to JazzCash/Bank...')">WITHDRAW TO BANK/JAZZCASH</button>\` : ''}
             </div>
         </body>
     `);
