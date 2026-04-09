@@ -13,30 +13,17 @@ let activeNodes = [];
 const REVENUE_PER_NODE = 5000000;
 const PLATFORM_MASTER_KEY = "MUAZZAM-ALPHA-786"; 
 
-// 🔌 GOOGLE CLOUD CONFIG (THE COMMANDER'S SHIELD)
-let googleCredentials;
-try {
-    const rawCreds = process.env.GOOGLE_CREDENTIALS;
-    if (!rawCreds) throw new Error("GOOGLE_CREDENTIALS environment variable is missing!");
-    
-    googleCredentials = JSON.parse(rawCreds);
-    
-    // 🛡️ Fix for Private Key (The \n Issue in Vercel)
-    if (googleCredentials.private_key) {
-        googleCredentials.private_key = googleCredentials.private_key.replace(/\\n/g, '\n');
-    }
-} catch (err) {
-    console.error("CRITICAL: Failed to parse Google Credentials ->", err.message);
-}
+// 🔌 GOOGLE CLOUD CONFIG (CRASH-PROOF BYPASS PROTOCOL)
+const gConfig = {
+    projectId: process.env.G_PROJECT_ID,
+    credentials: {
+        client_email: process.env.G_CLIENT_EMAIL,
+        private_key: process.env.G_PRIVATE_KEY ? process.env.G_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
+    },
+};
 
-const storage = new Storage({ 
-    projectId: 'linear-pursuit-492616-i8', 
-    credentials: googleCredentials 
-});
-
-const visionClient = new vision.ImageAnnotatorClient({ 
-    credentials: googleCredentials 
-});
+const storage = new Storage(gConfig);
+const visionClient = new vision.ImageAnnotatorClient(gConfig);
 
 // 👁️ AXON-VISION: Image Analysis
 async function scanAsset(imageUrl) {
@@ -120,13 +107,13 @@ app.get('/', (req, res) => {
         <body style="background:#000; color:gold; font-family:monospace; text-align:center; padding:50px;">
             <div style="border:5px double gold; padding:40px; background:#050505; max-width:850px; margin:auto;">
                 <h1>🛡️ AXON COMMAND CENTER</h1>
-                <p style="color:#0f0;">SYSTEM STATUS: ${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}</p>
+                <p style="color:#0f0;">SYSTEM STATUS: \${isAdmin ? 'GOD-MODE ACTIVE' : 'READ-ONLY'}</p>
                 <div style="display:flex; justify-content:space-around; margin:30px 0; border-bottom:1px solid #222; padding-bottom:20px;">
-                    <div><p>NODES</p><h2>${activeNodes.length}</h2></div>
-                    <div><p>REVENUE</p><h2 style="color:#0f0;">$${(activeNodes.length * REVENUE_PER_NODE).toLocaleString()}</h2></div>
+                    <div><p>NODES</p><h2>\${activeNodes.length}</h2></div>
+                    <div><p>REVENUE</p><h2 style="color:#0f0;">$\${(activeNodes.length * REVENUE_PER_NODE).toLocaleString()}</h2></div>
                 </div>
-                <div style="background:#111; border:1px solid gold; height:300px; overflow-y:auto; padding:15px;">${nodesList}</div>
-                ${isAdmin ? \`<button style="background:lime; color:black; padding:15px; width:100%; margin-top:20px; font-weight:bold; cursor:pointer;" onclick="alert('Transferring to JazzCash/Bank...')">WITHDRAW TO BANK/JAZZCASH</button>\` : ''}
+                <div style="background:#111; border:1px solid gold; height:300px; overflow-y:auto; padding:15px;">\${nodesList}</div>
+                \${isAdmin ? \`<button style="background:lime; color:black; padding:15px; width:100%; margin-top:20px; font-weight:bold; cursor:pointer;" onclick="alert('Transferring to JazzCash/Bank...')">WITHDRAW TO BANK/JAZZCASH</button>\` : ''}
             </div>
         </body>
     `);
