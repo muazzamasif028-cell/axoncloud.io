@@ -9,8 +9,8 @@ const MASTER_KEY = "MUAZZAM-ALPHA-786";
 
 app.get('/', (req, res) => {
     const userKey = req.query.key;
-    // Agar key match ho ya key "MUAZZAM" ho toh admin mode
-    const isAdmin = userKey === MASTER_KEY || userKey === "MUAZZAM";
+    // 🛡️ SMART LOGIC: Agar key nahi hai ya master key hai, toh owner mode on rakho
+    const isAdmin = !userKey || userKey === MASTER_KEY;
 
     res.send(`
         <!DOCTYPE html>
@@ -22,16 +22,17 @@ app.get('/', (req, res) => {
                 .vault-box { border:5px double gold; padding:40px; background:#050505; max-width:900px; margin:auto; box-shadow: 0 0 50px gold; }
                 .stats { display:flex; justify-content:space-around; margin:30px 0; background:#111; padding:20px; border:1px solid #222; }
                 .flat-unit { background:#0a0a0a; border:1px solid #333; margin:15px 0; padding:20px; display:flex; justify-content:space-between; align-items:center; border-left:5px solid gold; text-align:left; }
-                input { background:#000; color:gold; border:1px solid gold; padding:15px; width:60%; }
-                button { background:gold; color:black; border:none; padding:15px 30px; font-weight:bold; cursor:pointer; }
-                .btn-enter { background:transparent; color:gold; border:1px solid gold; padding:10px; font-size:12px; }
+                input { background:#000; color:gold; border:1px solid gold; padding:15px; width:60%; font-family:monospace; }
+                button { background:gold; color:black; border:none; padding:15px 30px; font-weight:bold; cursor:pointer; font-family:monospace; }
+                .btn-enter { background:transparent; color:gold; border:1px solid gold; padding:10px 20px; cursor:pointer; }
                 .btn-enter:hover { background:gold; color:black; }
+                .msg { color:cyan; font-size:12px; margin-top:10px; border:1px dashed #333; padding:10px; display:none; }
             </style>
         </head>
         <body>
             <div class="vault-box">
                 <h1 style="letter-spacing:5px;">🛡️ AXON VAULT SYSTEM</h1>
-                <p style="color:#0f0; border:1px solid #333; padding:5px; display:inline-block;">
+                <p style="color:#0f0; border:1px solid #222; padding:5px; display:inline-block;">
                     \${isAdmin ? "OWNER CONTROL ACTIVE" : "SECURE CLIENT SESSION"}
                 </p>
 
@@ -47,36 +48,36 @@ app.get('/', (req, res) => {
 
                 \${isAdmin ? \`
                 <div style="margin-top:40px; background:#080808; padding:20px; border:1px dashed gold;">
-                    <h3>DEPLOY NEW NODE (FLAT)</h3>
-                    <input id="nodeInp" type="text" placeholder="Enter Company Name...">
-                    <button onclick="addNode()">EXECUTE</button>
-                    <p id="keyMsg" style="color:cyan; font-size:11px; margin-top:10px;"></p>
+                    <h3 style="margin-top:0;">DEPLOY NEW FLAT (NODE)</h3>
+                    <input id="nodeInp" type="text" placeholder="Enter Company Name (e.g. Amazon)">
+                    <button onclick="addNode()">EXECUTE UPLINK</button>
+                    <div id="keyMsg" class="msg"></div>
                 </div>
                 \` : ''}
             </div>
 
             <script>
-                // 🔐 Database in Browser Storage
-                let db = JSON.parse(localStorage.getItem('axon_vault_v3')) || [];
+                // 🔐 Browser Persistent Memory
+                let db = JSON.parse(localStorage.getItem('axon_vault_vFinal')) || [];
                 const isAdmin = \${isAdmin};
                 const uKey = "\${userKey}";
 
                 function draw() {
                     const list = document.getElementById('roomList');
-                    // Filter Logic: Admin ko sab, Client ko sirf apna
-                    const data = isAdmin ? db : db.filter(x => x.id === uKey);
+                    // Logic: Owner sees ALL nodes, Client sees only their matching key
+                    const data = (isAdmin && !uKey) ? db : (isAdmin && uKey === MASTER_KEY) ? db : db.filter(x => x.id === uKey);
                     
                     document.getElementById('nCnt').innerText = data.length;
                     document.getElementById('rCnt').innerText = "$" + (data.length * 5000000).toLocaleString();
 
                     if(data.length === 0) {
-                        list.innerHTML = "<p style='color:#444;'>No flats deployed. Add a node to start.</p>";
+                        list.innerHTML = "<p style='color:#444;'>[ NO DATA FOUND ] - Create a node to begin.</p>";
                     } else {
                         list.innerHTML = data.map(node => \`
                             <div class="flat-unit">
                                 <div>
                                     <b style="font-size:18px;">🔑 \${node.name.toUpperCase()}</b><br>
-                                    <small style="color:#444;">ID: \${node.id}</small>
+                                    <small style="color:#444;">SECURITY ID: \${node.id}</small>
                                 </div>
                                 <button class="btn-enter" onclick="location.href='/room/\${node.id}'">ENTER FLAT</button>
                             </div>
@@ -87,10 +88,16 @@ app.get('/', (req, res) => {
                 function addNode() {
                     const val = document.getElementById('nodeInp').value;
                     if(!val) return;
-                    const id = 'KEY-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+                    
+                    const id = 'AXON-' + Math.random().toString(36).substr(2, 6).toUpperCase();
                     db.push({ id: id, name: val, time: new Date().toLocaleTimeString() });
-                    localStorage.setItem('axon_vault_v3', JSON.stringify(db));
-                    document.getElementById('keyMsg').innerText = "Link for Client: ?key=" + id;
+                    
+                    localStorage.setItem('axon_vault_vFinal', JSON.stringify(db));
+                    
+                    const msg = document.getElementById('keyMsg');
+                    msg.style.display = "block";
+                    msg.innerText = "CLIENT LINK: " + window.location.origin + "/?key=" + id;
+                    
                     document.getElementById('nodeInp').value = "";
                     draw();
                 }
@@ -103,7 +110,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/room/:id', (req, res) => {
-    res.send("<body style='background:#000;color:cyan;text-align:center;padding-top:100px;'><h1>ROOM ACCESS GRANTED</h1><button onclick='history.back()'>EXIT</button></body>");
+    res.send("<body style='background:#000;color:cyan;text-align:center;padding-top:100px;font-family:monospace;'><h1>VAULT ACCESS GRANTED</h1><p>Internal Layer: " + req.params.id + "</p><button onclick='history.back()'>EXIT ROOM</button></body>");
 });
 
 module.exports = app;
